@@ -48,22 +48,22 @@ class Writing(Base):
     is_mature: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     prompt: Mapped["Prompt"] = relationship(back_populates="writings")
-    bookmarks: Mapped[list["Bookmark"]] = relationship(back_populates="writing")
+    # bookmarks: Mapped[list["Bookmark"]] = relationship(back_populates="writing")
 
 
-class Bookmark(Base):
-    __tablename__ = "bookmarks"
-    __table_args__ = (
-        UniqueConstraint("device_id", "writing_id", name="uq_device_writing"),
-    )
+# class Bookmark(Base):
+#     __tablename__ = "bookmarks"
+#     __table_args__ = (
+#         UniqueConstraint("device_id", "writing_id", name="uq_device_writing"),
+#     )
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    device_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
-    writing_id: Mapped[str] = mapped_column(
-        ForeignKey("writings.id"), nullable=False, index=True
-    )
+#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+#     device_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+#     writing_id: Mapped[str] = mapped_column(
+#         ForeignKey("writings.id"), nullable=False, index=True
+#     )
 
-    writing: Mapped["Writing"] = relationship(back_populates="bookmarks")
+#     writing: Mapped["Writing"] = relationship(back_populates="bookmarks")
 
 
 class DevicePreference(Base):

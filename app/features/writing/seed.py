@@ -1,98 +1,20 @@
-"""
-WritingsReader — Database layer (PostgreSQL + async SQLAlchemy)
-"""
+"""Development seed data for the writing feature."""
 
-from __future__ import annotations
+from sqlalchemy import select
 
-from sqlalchemy import Boolean, ForeignKey, String, Text, UniqueConstraint, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
-# ──────────────────────────────────────────────
-# Connection
-# ──────────────────────────────────────────────
-
-DATABASE_URL = "postgresql+asyncpg://raffi@localhost/writingsreader"
-
-engine = create_async_engine(DATABASE_URL, echo=False)
-async_session = async_sessionmaker(engine, expire_on_commit=False)
+from app.core.database import async_session
+from app.features.writing.models import Prompt, Writing
 
 
-# ──────────────────────────────────────────────
-# ORM Models
-# ──────────────────────────────────────────────
-
-
-class Base(DeclarativeBase):
-    pass
-
-
-class Prompt(Base):
-    __tablename__ = "prompts"
-
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    emotion: Mapped[str] = mapped_column(String(32), nullable=False)
-    theme: Mapped[str] = mapped_column(String(128), nullable=False)
-
-    writings: Mapped[list["Writing"]] = relationship(back_populates="prompt")
-
-
-class Writing(Base):
-    __tablename__ = "writings"
-
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    title: Mapped[str] = mapped_column(String(256), nullable=False)
-    prompt_id: Mapped[str] = mapped_column(ForeignKey("prompts.id"), nullable=False)
-    author_id: Mapped[str] = mapped_column(String(128), nullable=False)
-    full_text: Mapped[str] = mapped_column(Text, nullable=False)
-    is_mature: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-
-    prompt: Mapped["Prompt"] = relationship(back_populates="writings")
-    # bookmarks: Mapped[list["Bookmark"]] = relationship(back_populates="writing")
-
-
-# class Bookmark(Base):
-#     __tablename__ = "bookmarks"
-#     __table_args__ = (
-#         UniqueConstraint("device_id", "writing_id", name="uq_device_writing"),
-#     )
-
-#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-#     device_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
-#     writing_id: Mapped[str] = mapped_column(
-#         ForeignKey("writings.id"), nullable=False, index=True
-#     )
-
-#     writing: Mapped["Writing"] = relationship(back_populates="bookmarks")
-
-
-class DevicePreference(Base):
-    __tablename__ = "device_preferences"
-
-    device_id: Mapped[str] = mapped_column(String(128), primary_key=True)
-    is_adult: Mapped[bool] = mapped_column(Boolean, default=False)
-
-
-# ──────────────────────────────────────────────
-# Lifecycle helpers
-# ──────────────────────────────────────────────
-
-
-async def create_tables():
-    """Create all tables if they don't exist."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def seed_db():
-    """Insert seed data if the DB is empty."""
+async def seed_database():
+    """Insert any missing records from the sample dataset."""
     async with async_session() as session:
-        # Check if prompts already exist — skip seeding if so.
-        result = await session.execute(select(Prompt).limit(1))
-        if result.scalar_one_or_none() is not None:
-            print("   ↳ Seed data already exists, skipping.")
-            return
-
+        existing_prompt_ids = set(
+            (await session.execute(select(Prompt.id))).scalars().all()
+        )
+        existing_writing_ids = set(
+            (await session.execute(select(Writing.id))).scalars().all()
+        )
         author = "seed-author-device-001"
 
         prompts = [
@@ -100,7 +22,6 @@ async def seed_db():
             Prompt(id="prompt-joy", emotion="joy", theme="Found a Letter"),
             Prompt(id="prompt-sad", emotion="sad", theme="Lost a Friend"),
         ]
-        session.add_all(prompts)
 
         writings = [
             Writing(
@@ -313,7 +234,6 @@ async def seed_db():
                 title="A bad day",
                 prompt_id="prompt-angry",
                 author_id="seed-author-device-004",
-                is_mature=True,
                 full_text=(
                     "This is a test writing with profanity.\n"
                     "Sometimes everything goes wrong and you just want to say shit.\n"
@@ -321,7 +241,19 @@ async def seed_db():
                 ),
             ),
         ]
-        session.add_all(writings)
+        new_prompts = [
+            prompt for prompt in prompts if prompt.id not in existing_prompt_ids
+        ]
+        new_writings = [
+            writing for writing in writings if writing.id not in existing_writing_ids
+        ]
 
+        if not new_prompts and not new_writings:
+            print("   ↳ Seed data already exists, skipping.")
+            return
+
+        session.add_all([*new_prompts, *new_writings])
         await session.commit()
-        print("   ↳ Seeded 3 prompts and 10 writings.")
+        print(
+            f"   ↳ Seeded {len(new_prompts)} prompts and {len(new_writings)} writings."
+        )

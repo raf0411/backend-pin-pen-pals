@@ -1,5 +1,8 @@
 """Development seed data for the writing feature."""
 
+from datetime import UTC, datetime
+from uuid import NAMESPACE_URL, uuid5
+
 from sqlalchemy import select
 
 from app.core.database import async_session
@@ -241,6 +244,20 @@ async def seed_database():
                 ),
             ),
         ]
+        prompts_by_id = {prompt.id: prompt for prompt in prompts}
+        published_at = datetime(2026, 1, 1, tzinfo=UTC)
+        for writing in writings:
+            prompt = prompts_by_id[writing.prompt_id]
+            writing.client_writing_id = uuid5(
+                NAMESPACE_URL,
+                f"writingsreader:{writing.author_id}:{writing.id}",
+            )
+            writing.prompt_verb = "Write"
+            writing.prompt_full_text = prompt.theme
+            writing.prompt_emotions = [prompt.emotion.lower()]
+            writing.created_at = published_at
+            writing.published_at = published_at
+
         new_prompts = [
             prompt for prompt in prompts if prompt.id not in existing_prompt_ids
         ]

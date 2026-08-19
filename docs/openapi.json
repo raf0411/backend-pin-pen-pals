@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "WritingsReader API",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "paths": {
     "/api/writings": {
@@ -16,16 +16,9 @@
           {
             "name": "x-device-id",
             "in": "header",
-            "required": false,
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
+              "type": "string",
               "title": "X-Device-Id"
             }
           }
@@ -51,12 +44,52 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "200": {
+            "description": "An identical publish request already succeeded",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/WritingDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The client ID is already used by different content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid X-Device-ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Writing persistence failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -73,16 +106,9 @@
           {
             "name": "x-device-id",
             "in": "header",
-            "required": false,
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
+              "type": "string",
               "title": "X-Device-Id"
             }
           }
@@ -102,12 +128,32 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "400": {
+            "description": "Invalid X-Device-ID",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Writing persistence failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -137,16 +183,9 @@
           {
             "name": "x-device-id",
             "in": "header",
-            "required": false,
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
+              "type": "string",
               "title": "X-Device-Id"
             }
           }
@@ -162,12 +201,42 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Invalid X-Device-ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Writing persistence failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -227,6 +296,7 @@
             "title": "Text"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "text"
@@ -253,32 +323,68 @@
       },
       "CreateWritingRequest": {
         "properties": {
-          "title": {
+          "client_writing_id": {
             "type": "string",
-            "maxLength": 256,
-            "minLength": 1,
+            "format": "uuid",
+            "title": "Client Writing Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Title"
           },
           "full_text": {
             "type": "string",
             "maxLength": 50000,
-            "minLength": 1,
             "title": "Full Text"
           },
-          "prompt_id": {
+          "prompt": {
+            "$ref": "#/components/schemas/PromptSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "client_writing_id",
+          "full_text",
+          "prompt"
+        ],
+        "title": "CreateWritingRequest"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
             "type": "string",
-            "maxLength": 64,
-            "minLength": 1,
-            "title": "Prompt Id"
+            "title": "Detail"
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "full_text",
-          "prompt_id"
+          "detail"
         ],
-        "title": "CreateWritingRequest"
+        "title": "ErrorResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -292,6 +398,34 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "PromptSnapshot": {
+        "properties": {
+          "verb": {
+            "type": "string",
+            "title": "Verb"
+          },
+          "full_text": {
+            "type": "string",
+            "title": "Full Text"
+          },
+          "emotions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Emotions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "verb",
+          "full_text",
+          "emotions"
+        ],
+        "title": "PromptSnapshot"
       },
       "ValidationError": {
         "properties": {
@@ -339,6 +473,11 @@
             "type": "string",
             "title": "Id"
           },
+          "client_writing_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Writing Id"
+          },
           "title": {
             "type": "string",
             "title": "Title"
@@ -351,23 +490,36 @@
             "type": "string",
             "title": "Author Id"
           },
-          "prompt_theme": {
-            "type": "string",
-            "title": "Prompt Theme"
+          "prompt": {
+            "$ref": "#/components/schemas/PromptSnapshot"
           },
-          "prompt_emotion": {
+          "status": {
             "type": "string",
-            "title": "Prompt Emotion"
+            "const": "published",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
           }
         },
         "type": "object",
         "required": [
           "id",
+          "client_writing_id",
           "title",
           "full_text",
           "author_id",
-          "prompt_theme",
-          "prompt_emotion"
+          "prompt",
+          "status",
+          "created_at",
+          "published_at"
         ],
         "title": "WritingDetailResponse"
       },
@@ -376,6 +528,11 @@
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "client_writing_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Writing Id"
           },
           "title": {
             "type": "string",
@@ -389,23 +546,36 @@
             "type": "string",
             "title": "Author Id"
           },
-          "prompt_theme": {
-            "type": "string",
-            "title": "Prompt Theme"
+          "prompt": {
+            "$ref": "#/components/schemas/PromptSnapshot"
           },
-          "prompt_emotion": {
+          "status": {
             "type": "string",
-            "title": "Prompt Emotion"
+            "const": "published",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
           }
         },
         "type": "object",
         "required": [
           "id",
+          "client_writing_id",
           "title",
           "preview_text",
           "author_id",
-          "prompt_theme",
-          "prompt_emotion"
+          "prompt",
+          "status",
+          "created_at",
+          "published_at"
         ],
         "title": "WritingPreviewResponse"
       }

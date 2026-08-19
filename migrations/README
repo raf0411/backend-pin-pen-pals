@@ -1,0 +1,3 @@
+Alembic migration scripts for WritingsReader.
+
+See docs/MIGRATIONS.md for setup, upgrade, backfill, and downgrade instructions.

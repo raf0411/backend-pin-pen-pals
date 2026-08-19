@@ -1,0 +1,414 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WritingsReader API",
+    "version": "0.3.0"
+  },
+  "paths": {
+    "/api/writings": {
+      "post": {
+        "tags": [
+          "Writings"
+        ],
+        "summary": "Create Writing",
+        "operationId": "create_writing_api_writings_post",
+        "parameters": [
+          {
+            "name": "x-device-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWritingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WritingDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Writings"
+        ],
+        "summary": "List Writings",
+        "operationId": "list_writings_api_writings_get",
+        "parameters": [
+          {
+            "name": "x-device-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WritingPreviewResponse"
+                  },
+                  "title": "Response List Writings Api Writings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/writings/{writing_id}": {
+      "get": {
+        "tags": [
+          "Writings"
+        ],
+        "summary": "Get Writing",
+        "operationId": "get_writing_api_writings__writing_id__get",
+        "parameters": [
+          {
+            "name": "writing_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "title": "Writing Id"
+            }
+          },
+          {
+            "name": "x-device-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WritingDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/censor": {
+      "post": {
+        "tags": [
+          "Writings"
+        ],
+        "summary": "Censor Text",
+        "operationId": "censor_text_api_censor_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CensorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CensorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CensorRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 50000,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CensorRequest"
+      },
+      "CensorResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "was_censored": {
+            "type": "boolean",
+            "title": "Was Censored"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "was_censored"
+        ],
+        "title": "CensorResponse"
+      },
+      "CreateWritingRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "full_text": {
+            "type": "string",
+            "maxLength": 50000,
+            "minLength": 1,
+            "title": "Full Text"
+          },
+          "prompt_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Prompt Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "full_text",
+          "prompt_id"
+        ],
+        "title": "CreateWritingRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WritingDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "full_text": {
+            "type": "string",
+            "title": "Full Text"
+          },
+          "author_id": {
+            "type": "string",
+            "title": "Author Id"
+          },
+          "prompt_theme": {
+            "type": "string",
+            "title": "Prompt Theme"
+          },
+          "prompt_emotion": {
+            "type": "string",
+            "title": "Prompt Emotion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "full_text",
+          "author_id",
+          "prompt_theme",
+          "prompt_emotion"
+        ],
+        "title": "WritingDetailResponse"
+      },
+      "WritingPreviewResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "preview_text": {
+            "type": "string",
+            "title": "Preview Text"
+          },
+          "author_id": {
+            "type": "string",
+            "title": "Author Id"
+          },
+          "prompt_theme": {
+            "type": "string",
+            "title": "Prompt Theme"
+          },
+          "prompt_emotion": {
+            "type": "string",
+            "title": "Prompt Emotion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "preview_text",
+          "author_id",
+          "prompt_theme",
+          "prompt_emotion"
+        ],
+        "title": "WritingPreviewResponse"
+      }
+    }
+  }
+}
